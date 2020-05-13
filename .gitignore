@@ -1,0 +1,6 @@
+# package directories
+node_modules
+videos
+ui/dist
+ui/node_modules
+ui/.cache

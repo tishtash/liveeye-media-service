@@ -1,0 +1,25 @@
+{
+  "name": "live_http_stream",
+  "version": "1.0.0",
+  "description": "RTSP to HTTP",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "debug": "DEBUG=true node  index.js",
+    "start:clean": "CLEANDB=true node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "fluent-ffmpeg": "^2.1.2",
+    "hls-server": "^1.5.0",
+    "lambda-log": "^2.3.1",
+    "lowdb": "^1.0.0",
+    "promise-retry": "^1.1.1",
+    "rimraf": "^3.0.2",
+    "uuidv4": "^6.0.7"
+  }
+}
