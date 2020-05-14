@@ -84,7 +84,7 @@ app.post("/start", async (req, res) => {
       rtspUrl: req.body.uri,
       running: false,
       uri: `/videos/stream/${uniqueId}/index.m3u8`,
-      alias: "static",
+      cameraName: req.body.cameraName || "Aisle",
       mjpeg: `/videos/stream/${uniqueId}/mjpeg/stream.mjpeg`
     };
     // Start Check Existence
