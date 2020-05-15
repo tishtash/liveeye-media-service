@@ -7,6 +7,8 @@
     "start": "node index.js",
     "debug": "DEBUG=true node  index.js",
     "start:clean": "CLEANDB=true node index.js",
+    "build": "node build.js",
+    "deploy": "npm run build && aws s3 sync ./zip/ s3://liveeye-report-assets/softwares && aws cloudfront create-invalidation --distribution-id EE3FMV9BF8G8K --paths '/softwares/*'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -21,5 +23,8 @@
     "promise-retry": "^1.1.1",
     "rimraf": "^3.0.2",
     "uuidv4": "^6.0.7"
+  },
+  "devDependencies": {
+    "bestzip": "^2.1.5"
   }
 }

@@ -70,18 +70,18 @@ app.get("/videos/stream/:id/mjpeg/:file", (req, res) => {
 
 app.post("/start", async (req, res) => {
   try {
-    new URL(req.body.uri);
+    new URL(req.body.rtspUrl);
   } catch (e) {
     return res.status(400).send({
       message: "An Error Occured",
-      error: `Invalid URL::${req.body.uri}`
+      error: `Invalid URL::${req.body.rtspUrl}`
     });
   }
   try {
     const uniqueId = uuid();
     let resObj = {
       id: uniqueId,
-      rtspUrl: req.body.uri,
+      rtspUrl: req.body.rtspUrl,
       running: false,
       uri: `/videos/stream/${uniqueId}/index.m3u8`,
       cameraName: req.body.cameraName || "Aisle",
@@ -90,19 +90,19 @@ app.post("/start", async (req, res) => {
     // Start Check Existence
     const processExist = db
       .get("list")
-      .find({ rtspUrl: req.body.uri })
+      .find({ rtspUrl: req.body.rtspUrl })
       .value();
     if (processExist) {
       return res
         .status(400)
-        .send({ message: `Stream already running ${req.body.uri}` });
+        .send({ message: `Stream already running ${req.body.rtspUrl}` });
     }
     // End Check Existence
 
     //Start new process
     const rtspStream = new RTSPStream(log);
     await rtspStream.startStream(
-      req.body.uri,
+      req.body.rtspUrl,
       resObj.id,
       `./videos/stream/${resObj.id}`,
       db,
