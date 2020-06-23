@@ -21,7 +21,7 @@ class App extends Component {
     /** @property {APIHandler} apiHandler */
     this.apiHandler =
       this.props.apiHandler ||
-      new APIHandler(process.env.API_URL || "http://localhost:8080");
+      new APIHandler(process.env.API_URL || "http://localhost:8888");
     /** @property {HTMLInputElement} uriInput */
     this.uriInput;
   }

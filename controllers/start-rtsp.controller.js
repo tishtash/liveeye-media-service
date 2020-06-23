@@ -65,7 +65,8 @@ module.exports = class RTSPStream {
     streamId,
     outputPath,
     db,
-    shouldSetupDirectory
+    shouldSetupDirectory,
+    rtspObj
   ) => {
     let log = this.log;
     let uri = `${outputPath}/index.m3u8`;
@@ -77,6 +78,11 @@ module.exports = class RTSPStream {
         if (shouldSetupDirectory) {
           await this.setupDirectory(outputPath);
           await this.setupMjpegDirectory(`${outputPath}/mjpeg`);
+        }
+        if (rtspObj) {
+          db.get("list")
+            .push(rtspObj)
+            .write();
         }
         this.startStreamProcess(
           rtspUrl,
@@ -97,34 +103,24 @@ module.exports = class RTSPStream {
 
   startStreamProcess = (rtspUrl, streamId, uri, outputPath, fps, log, db) => {
     let isResolved = false;
-    var streamProcess = new FfmpegRtspCommand(rtspUrl);
+    const streamProcess = new FfmpegRtspCommand(rtspUrl);
     const retryProcess = this.retryProcess;
     let timeoutRef;
     streamProcess
       .inputOptions([
         "-y",
         "-fflags nobuffer",
+        // "-loglevel warning",
         "-analyzeduration 150000000",
         "-probesize 150000000",
         "-re",
-        // "-fpsprobesize 150000000",
         "-rtsp_transport tcp"
-      ])
-      .output(`${outputPath}/mjpeg/stream.jpg`)
-      .outputOptions([
-        "-preset veryfast",
-        "-ignore_unknown",
-        "-an",
-        "-r 1",
-        "-s 300x300",
-        "-f image2",
-        "-update 1"
       ])
 
       .output(`${outputPath}/index.m3u8`)
       .outputOptions([
-        "-preset veryfast",
-        // `-g ${fps}`,
+        "-preset ultrafast",
+        `-g ${fps}`,
         "-sc_threshold 0",
         // "-an",
         // "-dump",
@@ -139,11 +135,17 @@ module.exports = class RTSPStream {
         // -map v:0 -c:v:0 libx264 -b:v:0 2000k \
         // -map v:0 -c:v:1 libx264 -b:v:1 6000k \
         // "-vsync 0",
+
         "-copyts",
+        // "-c:v copy",
+        // "-c:a copy",
+
         // "-vcodec copy",
         // "-an",
         // "-max_muxing_queue_size 99999",
-        "-movflags frag_keyframe+empty_moov",
+
+        // "-movflags frag_keyframe+empty_moov",
+
         // "-c:v copy",
         // "-map v:0",
         // "-c:v copy",
@@ -152,23 +154,63 @@ module.exports = class RTSPStream {
         // "-b:a 64k",
         // "-ac 2",
         // "-acodec copy",
+        //-avioflags +direct -hls_ts_options fflags=+flush_packets flush packet
+        //#EXTM3U
+        // #EXT-X-VERSION:3
+        // #EXT-X-TARGETDURATION:6
+        // #EXT-X-MEDIA-SEQUENCE:1
+        // #EXT-X-DISCONTINUITY-SEQUENCE:1
+        // #EXT-X-DISCONTINUITY
+        // #EXTINF:6,loading
+        // segment-1.ts
+        // #EXT-X-DISCONTINUITY
+        // #EXTINF:6,loading
+        // segment-2.ts
+        // #EXT-X-DISCONTINUITY
+        // #EXTINF:6,video;1;2020-05-18T03:13:11.218773185+00:00
+        // segment-3.ts
+
         "-f hls",
-        "-hls_flags delete_segments+append_list",
-        "-segment_list_flags live",
+        "-strict 2",
+        "-hls_flags delete_segments+omit_endlist",
+        "-hls_ts_options fflags=+flush_packets",
+
+        // "hls_ts_options options_list",
+        // "-segment_list_flags live",
+        // "-hls_base_url /abc/adsac/asda",
+        // "-hls_start_number_source datetime",
+        // "-hls_playlist_type vod",
         "-segment_list_type m3u8",
-        "-hls_time 4",
-        "-hls_list_size 150",
+        "-segment_list_flags live",
+        "-start_number 0",
+        "-hls_allow_cache 0",
+        "-hls_time 2",
+        "-hls_list_size 3",
         `-hls_segment_filename ${outputPath}/file_%03d.ts`
+      ])
+
+      .output(`${outputPath}/mjpeg/stream.jpeg`)
+      .outputOptions([
+        "-preset ultrafast",
+        "-ignore_unknown",
+        "-an",
+        "-r 1",
+        "-s 300x300",
+        "-f image2",
+        "-update 1"
       ])
 
       .on("start", function(commandLine) {
         db.get("list")
           .find({ id: streamId })
-          .assign({ processId: streamProcess.ffmpegProc.pid })
+          .assign({
+            processId: streamProcess.ffmpegProc.pid,
+            proc: streamProcess
+          })
           .write();
         timeoutRef = setTimeout(() => {
           if (!isResolved) {
-            process.kill(streamProcess.ffmpegProc.pid, "SIGKILL");
+            streamProcess.kill("SIGKILL");
           }
         }, 300000);
         log.debug(
@@ -221,6 +263,23 @@ module.exports = class RTSPStream {
         }
       })
       .run();
+
+    // setTimeout(() => {
+    //   console.log("here");
+    //   streamProcess
+    //     .output(`./clips/%Y-%m-%dT%H-%M-%S.mp4`)
+    //     .outputOptions([
+    //       "-ignore_unknown",
+    //       "-f segment",
+    //       "-segment_format mp4",
+    //       "-segment_format_options movflags=+faststart+frag_keyframe+empty_moov",
+    //       "-reset_timestamps 1",
+    //       "-strftime 1",
+    //       "-segment_list pipe:1",
+    //       "-strict 2"
+    //     ])
+    //     .run();
+    // }, 10000);
   };
 
   getFrameRate = rtspUrl => {

@@ -5,11 +5,12 @@ module.exports = class MjpegVideo {
   constructor() {}
 
   serveMjpegVideo = (req, res) => {
-    const filePath = `./videos/stream/${req.params.id}/mjpeg/stream.jpg`;
+    const filePath = `./videos/stream/${req.params.id}/mjpeg/stream.jpeg`;
     const boundary = "Ba4oTvQMY8ew04N8dcnM"; // boundary string
     var fileExt = filePath.slice(filePath.lastIndexOf("."));
     fileExt = (fileExt && fileExt.toLowerCase()) || fileExt;
-    if (fileExt === ".jpg") {
+    if (fileExt === ".jpeg") {
+      let imageInterval;
       res.setHeader(
         "Content-Type",
         "multipart/x-mixed-replace;boundary=" + boundary
@@ -25,21 +26,24 @@ module.exports = class MjpegVideo {
       res.setHeader("Max-Age", 0);
 
       try {
-        fs.watch(filePath, (eventType, filename) => {
-          fs.readFile(filePath, (err, imageData) => {
-            if (!err) {
-              res.write("--" + boundary + "\r\n");
-              res.write("Content-Type: image/jpeg\r\n");
-              res.write("Content-Length: " + imageData.length + "\r\n");
-              res.write("\r\n");
-              res.write(Buffer.from(imageData), "binary");
-              res.write("\r\n");
-            } else {
-              console.log(err);
-            }
-          });
-        });
+        imageInterval = setInterval(() => {
+          if (fs.existsSync(filePath)) {
+            fs.readFile(filePath, (err, imageData) => {
+              if (!err) {
+                res.write("--" + boundary + "\r\n");
+                res.write("Content-Type: image/jpeg\r\n");
+                res.write("Content-Length: " + imageData.length + "\r\n");
+                res.write("\r\n");
+                res.write(Buffer.from(imageData), "binary");
+                res.write("\r\n");
+              } else {
+                console.log(err);
+              }
+            });
+          }
+        }, 1000);
       } catch (err) {
+        clearInterval(imageInterval);
         res.status(400).send({ message: "Process doesn't exist" });
       }
     } else {

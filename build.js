@@ -4,8 +4,10 @@ zip({
   source: [
     "build/*",
     "controllers/*",
+    "certs/*",
     "services/*",
     "index.js",
+    ".env",
     "liveeye-media-service-setup.bat",
     "liveeye-media-service-stop.bat",
     "liveeye-media-service-start.bat",

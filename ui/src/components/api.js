@@ -24,7 +24,7 @@ export class APIHandler {
       method: "POST",
       url: `${this.url}/start`,
       responseType: "json",
-      data: { uri }
+      data: { rtspUrl: uri }
     });
   }
 }
