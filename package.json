@@ -15,7 +15,7 @@
   "license": "ISC",
   "dependencies": {
     "acme-dns-01-route53": "0.0.1",
-    "aws-sdk": "^2.549.0",
+    "aws-sdk": "^2.814.0",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
